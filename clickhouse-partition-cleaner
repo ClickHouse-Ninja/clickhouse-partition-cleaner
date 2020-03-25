@@ -5,6 +5,7 @@
 # defaults
 host="127.0.0.1"
 port=9000
+user=default
 database="default"
 table="test"
 parts=10
@@ -14,11 +15,12 @@ usage()
 {
     echo "
 USAGE:
-   clickhouse-partition-cleaner [arguments...]
+   $0 [arguments...]
 
 ARGUMENTS:
    --host          server host (default: \"$host\")
    --port          server port (default: \"$port\")
+   --user,     -u  user name (default: \"$user\")
    --database, -d  database (default: \"$database\")
    --table,    -t  table (default: \"$table\")
    --parts,    -p  the number of last partitions that will not be deleted (default: \"$parts\")
@@ -30,6 +32,7 @@ while [ "$1" != "" ]; do
     case "$1" in
              --host )      host="$2";     shift;;
              --port )      port="$2";     shift;;
+        -u | --user )      user="$2";     shift;;
         -d | --database )  database="$2"; shift;;
         -t | --table )     table="$2";    shift;;
         -p | --parts )     parts="$2";    shift;;
@@ -62,10 +65,10 @@ echo "Connecting to ${host}:${port}";
 echo "Cleaning parts for '${database}.${table}' table"
 $run || echo 'Dry run, do not clean anything'
 
-echo "$query" | clickhouse-client -h "$host" --port "$port" | while read -r partition; do
+echo "$query" | clickhouse-client --host "$host" --port "$port" --user "$user" | while read -r partition; do
     echo "drop partition=${partition} on ${database}.${table}"
     if $run; then
-      clickhouse-client -h "$host" --port "$port" -q "ALTER TABLE \"$database\".\"$table\" DROP PARTITION ${partition}"
+      clickhouse-client --host "$host" --port "$port" --user "$user" -q "ALTER TABLE \"$database\".\"$table\" DROP PARTITION ${partition}"
     else
       true
     fi
