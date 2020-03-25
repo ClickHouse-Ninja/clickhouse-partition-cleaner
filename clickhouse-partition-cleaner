@@ -1,4 +1,6 @@
-#!/bin/sh
+#!/bin/sh -e
+# LICENSE: MIT
+# Copyright (C) 2020 Kirill Shvakov
 
 # defaults
 host="127.0.0.1"
