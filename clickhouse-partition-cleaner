@@ -38,19 +38,19 @@ while [ "$1" != "" ]; do
 done
 
 query="
-SELECT 
-    DISTINCT partition 
+SELECT
+    DISTINCT partition
 FROM system.parts
 WHERE partition NOT IN (
-    SELECT 
-        DISTINCT partition 
-    FROM system.parts 
+    SELECT
+        DISTINCT partition
+    FROM system.parts
     WHERE database = '${database}'
     AND   table    = '${table}'
     AND   active
-    ORDER BY partition 
-    DESC LIMIT ${parts} 
-) 
+    ORDER BY partition
+    DESC LIMIT ${parts}
+)
 AND database = '${database}'
 AND table    = '${table}'
 AND active
