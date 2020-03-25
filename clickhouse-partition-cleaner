@@ -6,6 +6,7 @@ port=9000
 database="default"
 table="test"
 parts=10
+run=true
 
 usage()
 {
@@ -19,6 +20,7 @@ ARGUMENTS:
    --database, -d  database (default: \"$database\")
    --table,    -t  table (default: \"$table\")
    --parts,    -p  the number of last partitions that will not be deleted (default: \"$parts\")
+   --dry-run,  -n  do not apply cleaning, only show partitions to clean out
     ";
 }
 
@@ -29,7 +31,8 @@ while [ "$1" != "" ]; do
         -d | --database )  database="$2"; shift;;
         -t | --table )     table="$2";    shift;;
         -p | --parts )     parts="$2";    shift;;
-        -h | --help )      usage;         exit;; 
+        -n | --dry-run )   run=false           ;;
+        -h | --help )      usage;         exit;;
     esac
     shift
 done
@@ -55,8 +58,13 @@ AND active
 
 echo "Connecting to ${host}:${port}";
 echo "Cleaning parts for '${database}.${table}' table"
+$run || echo 'Dry run, do not clean anything'
 
-echo $query | clickhouse-client -h $host --port $port | while read partition; do
+echo "$query" | clickhouse-client -h "$host" --port "$port" | while read -r partition; do
     echo "drop partition=${partition} on ${database}.${table}"
-    clickhouse-client -h $host --port $port -q "ALTER TABLE \"$database\".\"$table\" DROP PARTITION ${partition}"
+    if $run; then
+      clickhouse-client -h "$host" --port "$port" -q "ALTER TABLE \"$database\".\"$table\" DROP PARTITION ${partition}"
+    else
+      true
+    fi
 done
